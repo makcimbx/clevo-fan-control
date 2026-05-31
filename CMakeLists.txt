@@ -7,27 +7,45 @@ project(ClevoFanControl C)
 # Enable the language standard.
 set(CMAKE_C_STANDARD 99)
 
-# Explicitly link the math library.
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -lm")
-
 # Add the main executable.
 add_executable(clevo-fan-control src/main.c)
 
 # Use the package PkgConfig to detect dependencies.
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(APPINDICATOR REQUIRED appindicator3-0.1)
+
+# Prefer the legacy AppIndicator package when available, but fall back to
+# Ayatana AppIndicator. Newer Debian/Ubuntu releases ship Ayatana instead of
+# appindicator3-0.1.
+pkg_check_modules(APPINDICATOR appindicator3-0.1)
+if(NOT APPINDICATOR_FOUND)
+        pkg_check_modules(APPINDICATOR REQUIRED ayatana-appindicator3-0.1)
+        target_compile_definitions(clevo-fan-control PRIVATE USE_AYATANA_APPINDICATOR)
+endif()
+
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
 # Include the dependencies.
-include_directories(${APPINDICATOR_INCLUDE_DIRS})
-include_directories(${GTK3_INCLUDE_DIRS})
-link_directories(${GTK3_LIBRARY_DIRS})
+target_include_directories(clevo-fan-control PRIVATE
+        ${APPINDICATOR_INCLUDE_DIRS}
+        ${GTK3_INCLUDE_DIRS}
+)
 
-# Add other flags to the compiler
-add_definitions(${GTK3_CFLAGS_OTHER})
+target_link_directories(clevo-fan-control PRIVATE
+        ${APPINDICATOR_LIBRARY_DIRS}
+        ${GTK3_LIBRARY_DIRS}
+)
+
+target_compile_options(clevo-fan-control PRIVATE
+        ${APPINDICATOR_CFLAGS_OTHER}
+        ${GTK3_CFLAGS_OTHER}
+)
 
 # Link the target to the dependencies.
-target_link_libraries(clevo-fan-control ${APPINDICATOR_LIBRARIES} ${GTK3_LIBRARIES})
+target_link_libraries(clevo-fan-control
+        ${APPINDICATOR_LIBRARIES}
+        ${GTK3_LIBRARIES}
+        m
+)
 
 # Specify installation rules.
 install(

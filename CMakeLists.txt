@@ -24,23 +24,26 @@ endif()
 
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
-# Include the dependencies.
+# Include dependency headers for this target.
 target_include_directories(clevo-fan-control PRIVATE
         ${APPINDICATOR_INCLUDE_DIRS}
         ${GTK3_INCLUDE_DIRS}
 )
 
+# Add dependency library search paths for this target.
 target_link_directories(clevo-fan-control PRIVATE
         ${APPINDICATOR_LIBRARY_DIRS}
         ${GTK3_LIBRARY_DIRS}
 )
 
+# Add dependency-specific compiler flags for this target.
 target_compile_options(clevo-fan-control PRIVATE
         ${APPINDICATOR_CFLAGS_OTHER}
         ${GTK3_CFLAGS_OTHER}
 )
 
-# Link the target to the dependencies.
+# Link the target to AppIndicator/GTK and libm. round() is provided by libm,
+# so it needs to be modeled as a link dependency instead of a compiler flag.
 target_link_libraries(clevo-fan-control
         ${APPINDICATOR_LIBRARIES}
         ${GTK3_LIBRARIES}
